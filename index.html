@@ -19,20 +19,25 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        body {
+        html, body {
             font-family: 'Inter', sans-serif;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        /* Contenedor principal en columna para que el mapa ocupe el espacio restante exacto */
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
             height: 100dvh;
             width: 100vw;
         }
-        /* Ajuste de mapa para llenar la pantalla de forma responsiva en móviles */
         #map {
-            height: 100dvh;
-            width: 100vw;
+            flex: 1;
+            width: 100%;
             z-index: 1;
-        }
-        /* Posicionamiento de controles de zoom de Leaflet debajo del header */
-        .leaflet-control-container .leaflet-top.leaflet-left {
-            top: 75px;
         }
         /* Personalización del Popup */
         .custom-popup .leaflet-popup-content-wrapper {
@@ -42,40 +47,59 @@
         }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 overflow-hidden relative">
+<body class="bg-slate-100 text-slate-800">
 
-    <!-- Encabezado Superior -->
-    <header class="absolute top-0 left-0 right-0 z-10 bg-slate-900/90 backdrop-blur-md text-white px-3 py-2.5 sm:px-4 sm:py-3 shadow-lg flex items-center justify-between">
-        <div class="flex items-center space-x-2">
-            <div class="bg-blue-600 p-2 rounded-lg text-white">
-                <i class="fa-solid fa-droplet text-base sm:text-lg"></i>
+    <div class="app-container">
+        <!-- Encabezado Superior Estático en Flexbox (No flota sobre el mapa, por lo que nunca lo oculta) -->
+        <header class="bg-slate-900 text-white px-3 py-2.5 sm:px-4 sm:py-3 shadow-lg flex items-center justify-between z-10 shrink-0">
+            <div class="flex items-center space-x-2">
+                <div class="bg-blue-600 p-2 rounded-lg text-white">
+                    <i class="fa-solid fa-droplet text-base sm:text-lg"></i>
+                </div>
+                <div>
+                    <h1 class="font-bold text-sm sm:text-lg leading-tight">Red Agua ZMG</h1>
+                    <p class="text-[10px] sm:text-xs text-slate-400">Monitoreo Ciudadano Guadalajara</p>
+                </div>
             </div>
-            <div>
-                <h1 class="font-bold text-sm sm:text-lg leading-tight">Red Agua ZMG</h1>
-                <p class="text-[10px] sm:text-xs text-slate-400">Monitoreo Ciudadano Guadalajara</p>
-            </div>
-        </div>
-        
-        <div class="flex items-center space-x-2">
-            <button id="exportBtn" onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg border border-slate-700 flex items-center space-x-1.5 transition">
-                <i class="fa-solid fa-download"></i>
-                <span class="hidden sm:inline">Exportar</span>
-            </button>
             
-            <button onclick="toggleForm()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-3 py-1.5 sm:py-2 rounded-lg flex items-center space-x-1.5 font-medium shadow-md transition">
-                <i class="fa-solid fa-plus"></i>
-                <span>Reportar</span>
-            </button>
-        </div>
-    </header>
+            <div class="flex items-center space-x-2">
+                <button id="exportBtn" onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg border border-slate-700 flex items-center space-x-1.5 transition">
+                    <i class="fa-solid fa-download"></i>
+                    <span class="hidden sm:inline">Exportar</span>
+                </button>
+                
+                <button onclick="toggleForm()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-3 py-1.5 sm:py-2 rounded-lg flex items-center space-x-1.5 font-medium shadow-md transition">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Reportar</span>
+                </button>
+            </div>
+        </header>
 
-    <!-- Contenedor Principal: Mapa -->
-    <div id="map"></div>
+        <!-- Contenedor Principal: Mapa -->
+        <div id="map" class="relative">
+            <!-- Leyenda Flotante dentro del mapa -->
+            <div class="absolute bottom-4 left-3 z-[400] bg-white/95 backdrop-blur-sm p-2.5 rounded-xl shadow-lg border border-slate-200 text-xs space-y-1.5 max-w-[180px] sm:max-w-xs">
+                <h4 class="font-bold text-slate-700 border-b pb-0.5 mb-1 text-[11px]">Estatus del Servicio</h4>
+                <div class="flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-red-600 inline-block shadow"></span>
+                    <span class="text-slate-600 text-[11px]">Sin agua</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block shadow"></span>
+                    <span class="text-slate-600 text-[11px]">Baja presión</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block shadow"></span>
+                    <span class="text-slate-600 text-[11px]">Agua sucia</span>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Panel Lateral / Modal de Formulario -->
-    <div id="formPanel" class="fixed inset-y-0 right-0 w-full sm:w-96 bg-white shadow-2xl z-20 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col h-full">
+    <div id="formPanel" class="fixed inset-y-0 right-0 w-full sm:w-96 bg-white shadow-2xl z-30 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col h-full">
         
-        <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
+        <div class="p-4 bg-slate-900 text-white flex items-center justify-between shrink-0">
             <div class="flex items-center space-x-2">
                 <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
                 <h2 class="font-bold text-lg">Nuevo Reporte</h2>
@@ -144,23 +168,6 @@
         </div>
     </div>
 
-    <!-- Leyenda Flotante de Simbología -->
-    <div class="absolute bottom-4 left-3 z-10 bg-white/95 backdrop-blur-sm p-2.5 rounded-xl shadow-lg border border-slate-200 text-xs space-y-1.5 max-w-[180px] sm:max-w-xs">
-        <h4 class="font-bold text-slate-700 border-b pb-0.5 mb-1 text-[11px]">Estatus del Servicio</h4>
-        <div class="flex items-center space-x-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-red-600 inline-block shadow"></span>
-            <span class="text-slate-600 text-[11px]">Sin agua</span>
-        </div>
-        <div class="flex items-center space-x-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block shadow"></span>
-            <span class="text-slate-600 text-[11px]">Baja presión</span>
-        </div>
-        <div class="flex items-center space-x-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block shadow"></span>
-            <span class="text-slate-600 text-[11px]">Agua sucia</span>
-        </div>
-    </div>
-
     <!-- Script de Configuración y Lógica -->
     <script>
         const GDL_CENTER = [20.6760, -103.3470];
@@ -173,5 +180,166 @@
         let reports = [];
 
         window.onload = function() {
-            init
-        
+            initMap();
+            loadReports();
+        };
+
+        function initMap() {
+            map = L.map('map', {
+                zoomControl: true,
+                attributionControl: false
+            }).setView(GDL_CENTER, ZOOM_LEVEL);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19
+            }).addTo(map);
+
+            // Forzar actualización de tamaño para asegurar que renderice bien en móviles
+            setTimeout(() => {
+                map.invalidateSize();
+            }, 100);
+
+            map.on('click', function(e) {
+                selectedLat = e.latlng.lat;
+                selectedLng = e.latlng.lng;
+                
+                document.getElementById('coordsInput').value = `${selectedLat.toFixed(5)}, ${selectedLng.toFixed(5)}`;
+                
+                if (tempMarker) {
+                    map.removeLayer(tempMarker);
+                }
+                
+                tempMarker = L.circleMarker([selectedLat, selectedLng], {
+                    radius: 8,
+                    fillColor: "#2563eb",
+                    color: "#ffffff",
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0.9
+                }).addTo(map);
+
+                const formPanel = document.getElementById('formPanel');
+                if (formPanel.classList.contains('translate-x-full')) {
+                    toggleForm();
+                }
+            });
+        }
+
+        function toggleForm() {
+            const formPanel = document.getElementById('formPanel');
+            formPanel.classList.toggle('translate-x-full');
+        }
+
+        function createCustomMarker(estado) {
+            let color = '#dc2626';
+            if (estado === 'baja_presion') color = '#f97316';
+            if (estado === 'agua_sucia') color = '#f59e0b';
+
+            return L.divIcon({
+                className: 'custom-icon',
+                html: `<div style="background-color: ${color}; width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);"></div>`,
+                iconSize: [18, 18],
+                iconAnchor: [9, 9]
+            });
+        }
+
+        function saveReport(event) {
+            event.preventDefault();
+
+            if (!selectedLat || !selectedLng) {
+                alert("Por favor, haz clic sobre el mapa para indicar la ubicación de tu colonia.");
+                return;
+            }
+
+            const estadoSelect = document.getElementById('estado');
+            const estadoTexto = estadoSelect.options[estadoSelect.selectedIndex].text;
+            
+            const newReport = {
+                id: Date.now(),
+                lat: selectedLat,
+                lng: selectedLng,
+                colonia: document.getElementById('colonia').value.trim(),
+                estado: estadoSelect.value,
+                estadoTexto: estadoTexto,
+                dias: document.getElementById('dias').value,
+                nombre: document.getElementById('nombre').value.trim() || 'Vecino Anónimo',
+                detalles: document.getElementById('detalles').value.trim(),
+                fecha: new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })
+            };
+
+            reports.push(newReport);
+            localStorage.setItem('gdl_water_reports', JSON.stringify(reports));
+
+            renderReportMarker(newReport);
+
+            document.getElementById('waterReportForm').reset();
+            document.getElementById('coordsInput').value = '';
+            if (tempMarker) {
+                map.removeLayer(tempMarker);
+                tempMarker = null;
+            }
+            selectedLat = null;
+            selectedLng = null;
+
+            toggleForm();
+        }
+
+        function renderReportMarker(report) {
+            const marker = L.marker([report.lat, report.lng], {
+                icon: createCustomMarker(report.estado)
+            }).addTo(map);
+
+            const popupContent = `
+                <div class="p-2 space-y-1.5 min-w-[200px]">
+                    <div class="flex items-center justify-between border-b pb-1">
+                        <span class="font-bold text-slate-800 text-sm">${escapeHtml(report.colonia)}</span>
+                        <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-mono">${report.dias}d sin agua</span>
+                    </div>
+                    <div class="text-xs font-medium text-slate-700">
+                        ${report.estadoTexto}
+                    </div>
+                    ${report.detalles ? `<p class="text-xs text-slate-500 italic bg-slate-50 p-1.5 rounded border border-slate-100">"${escapeHtml(report.detalles)}"</p>` : ''}
+                    <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+                        <span><i class="fa-regular fa-user mr-1"></i>${escapeHtml(report.nombre)}</span>
+                        <span>${report.fecha}</span>
+                    </div>
+                </div>
+            `;
+
+            marker.bindPopup(popupContent, { className: 'custom-popup' });
+        }
+
+        function loadReports() {
+            const savedReports = localStorage.getItem('gdl_water_reports');
+            
+            if (!savedReports) {
+                reports = [];
+                localStorage.setItem('gdl_water_reports', JSON.stringify(reports));
+            } else {
+                reports = JSON.parse(savedReports);
+            }
+
+            reports.forEach(report => renderReportMarker(report));
+        }
+
+        function exportData() {
+            if (reports.length === 0) {
+                alert("No hay reportes para exportar aún.");
+                return;
+            }
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(reports, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `reportes_agua_gdl_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function escapeHtml(str) {
+            return str ? str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") : '';
+        }
+    </script>
+</body>
+</html>
