@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Reporte Ciudadano de Agua - GDL</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      background-color: #f8fafc;
+    }
+
+    header {
+      background-color: #0284c7;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .container {
+      display: flex;
+      flex: 1;
+      flex-direction: row;
+      height: calc(100vh - 80px);
+      width: 100%;
+    }
+
+    #map {
+      flex: 2;
+      height: 100%;
+      min-height: 400px;
+      width: 100%;
+      background-color: #e5e7eb; /* Fondo de carga si tarda la red */
+    }
+
+    .sidebar {
+      flex: 1;
+      min-width: 300px;
+      padding: 1.5rem;
+      background: #ffffff;
+      overflow-y: auto;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        flex-direction: column;
+        height: auto;
+      }
+      #map {
+        height: 50vh;
+        min-height: 350px;
+      }
+      .sidebar {
+        min-width: 100%;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+      color: #334155;
+      font-size: 0.9rem;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      padding: 0.6rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 4px;
+      font-size: 0.9rem;
+    }
+
+    textarea {
+      resize: vertical;
+      height: 70px;
+    }
+
+    button {
+      background-color: #0284c7;
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      width: 100%;
+      border-radius: 4px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    button:hover {
+      background-color: #0369a1;
+    }
+
+    .instructions {
+      background: #e0f2fe;
+      padding: 0.75rem;
+      border-left: 4px solid #0284c7;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      color: #0369a1;
+      border-radius: 0 4px 4px 0;
+    }
+
+    .counter {
+      margin-top: 1.5rem;
+      padding: 0.75rem;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      text-align: center;
+      font-weight: bold;
+      color: #1e293b;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Reporte Ciudadano: Escasez de Agua GDL</h1>
+    <p>Haz clic en el mapa para ubicar y publicar tu reporte</p>
+  </header>
+
+  <div class="container">
+    <div id="map"></div>
+
+    <div class="sidebar">
+      <h3>Nuevo Reporte</h3>
+      <div class="instructions">
+        1. Da clic sobre tu colonia en el mapa.<br>
+        2. Rellena los datos.<br>
+        3. Presiona "Publicar Reporte".
+      </div>
+
+      <form id="reportForm">
+        <div class="form-group">
+          <label for="colonia">Colonia:</label>
+          <input type="text" id="colonia" required placeholder="Ej. Americana, Providencia...">
+        </div>
+
+        <div class="form-group">
+          <label for="problema">Tipo de problema:</label>
+          <select id="problema">
+            <option value="Sin agua (Corte total)">Sin agua (Corte total)</option>
+            <option value="Baja presión">Baja presión</option>
+            <option value="Agua turbia / Sucia">Agua turbia / Sucia</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="dias">Días sin servicio:</label>
+          <input type
