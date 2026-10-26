@@ -1,176 +1,396 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Reporte Ciudadano de Agua - GDL</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Reporte Ciudadano: Agua en Guadalajara</title>
+    
+    <!-- Tailwind CSS (Estilos visuales modernos y responsivos) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet.js (Librería interactiva de mapas de código abierto) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- FontAwesome (Iconos) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tipografía Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- Leaflet CSS -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
-
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html, body {
-      height: 100%;
-      width: 100%;
-      font-family: Arial, sans-serif;
-    }
-
-    body {
-      display: flex;
-      flex-direction: column;
-      background-color: #f8fafc;
-    }
-
-    header {
-      background-color: #0284c7;
-      color: white;
-      padding: 1rem;
-      text-align: center;
-      flex-shrink: 0;
-    }
-
-    .container {
-      display: flex;
-      flex: 1;
-      flex-direction: row;
-      height: calc(100vh - 80px);
-      width: 100%;
-    }
-
-    #map {
-      flex: 2;
-      height: 100%;
-      min-height: 400px;
-      width: 100%;
-      background-color: #e5e7eb; /* Fondo de carga si tarda la red */
-    }
-
-    .sidebar {
-      flex: 1;
-      min-width: 300px;
-      padding: 1.5rem;
-      background: #ffffff;
-      overflow-y: auto;
-      box-shadow: -2px 0 5px rgba(0,0,0,0.1);
-    }
-
-    @media (max-width: 768px) {
-      .container {
-        flex-direction: column;
-        height: auto;
-      }
-      #map {
-        height: 50vh;
-        min-height: 350px;
-      }
-      .sidebar {
-        min-width: 100%;
-      }
-    }
-
-    .form-group {
-      margin-bottom: 1rem;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 0.5rem;
-      font-weight: bold;
-      color: #334155;
-      font-size: 0.9rem;
-    }
-
-    input, select, textarea {
-      width: 100%;
-      padding: 0.6rem;
-      border: 1px solid #cbd5e1;
-      border-radius: 4px;
-      font-size: 0.9rem;
-    }
-
-    textarea {
-      resize: vertical;
-      height: 70px;
-    }
-
-    button {
-      background-color: #0284c7;
-      color: white;
-      border: none;
-      padding: 0.75rem;
-      width: 100%;
-      border-radius: 4px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-
-    button:hover {
-      background-color: #0369a1;
-    }
-
-    .instructions {
-      background: #e0f2fe;
-      padding: 0.75rem;
-      border-left: 4px solid #0284c7;
-      margin-bottom: 1rem;
-      font-size: 0.85rem;
-      color: #0369a1;
-      border-radius: 0 4px 4px 0;
-    }
-
-    .counter {
-      margin-top: 1.5rem;
-      padding: 0.75rem;
-      background: #f1f5f9;
-      border: 1px solid #e2e8f0;
-      border-radius: 4px;
-      text-align: center;
-      font-weight: bold;
-      color: #1e293b;
-      font-size: 0.9rem;
-    }
-  </style>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Ajuste de mapa para llenar la pantalla en dispositivos móviles */
+        #map {
+            height: 100vh;
+            width: 100vw;
+            z-index: 1;
+        }
+        /* Estilos específicos de Leaflet para controles de zoom */
+        .leaflet-control-container .leaflet-top.leaflet-left {
+            top: 70px;
+        }
+        /* Personalización del Popup de Leaflet */
+        .custom-popup .leaflet-popup-content-wrapper {
+            border-radius: 12px;
+            padding: 4px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        .custom-popup .leaflet-popup-tip {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
 </head>
-<body>
+<body class="bg-slate-100 text-slate-800 overflow-hidden relative">
 
-  <header>
-    <h1>Reporte Ciudadano: Escasez de Agua GDL</h1>
-    <p>Haz clic en el mapa para ubicar y publicar tu reporte</p>
-  </header>
+    <!-- Encabezado Superior / Bar de Navegación -->
+    <header class="absolute top-0 left-0 right-0 z-10 bg-slate-900/90 backdrop-blur-md text-white px-4 py-3 shadow-lg flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+            <div class="bg-blue-600 p-2 rounded-lg text-white">
+                <i class="fa-solid fa-droplet text-lg"></i>
+            </div>
+            <div>
+                <h1 class="font-bold text-base sm:text-lg leading-tight">Red Agua ZMG</h1>
+                <p class="text-xs text-slate-400">Monitoreo Ciudadano Guadalajara</p>
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-2">
+            <!-- Botón para exportar datos -->
+            <button id="exportBtn" onclick="exportData()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs sm:text-sm px-3 py-2 rounded-lg border border-slate-700 flex items-center space-x-1.5 transition">
+                <i class="fa-solid fa-download"></i>
+                <span class="hidden sm:inline">Exportar</span>
+            </button>
+            
+            <!-- Botón toggle formulario móvil -->
+            <button onclick="toggleForm()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm px-3 py-2 rounded-lg flex items-center space-x-1.5 font-medium shadow-md transition">
+                <i class="fa-solid fa-plus"></i>
+                <span>Reportar</span>
+            </button>
+        </div>
+    </header>
 
-  <div class="container">
+    <!-- Contenedor Principal: Mapa -->
     <div id="map"></div>
 
-    <div class="sidebar">
-      <h3>Nuevo Reporte</h3>
-      <div class="instructions">
-        1. Da clic sobre tu colonia en el mapa.<br>
-        2. Rellena los datos.<br>
-        3. Presiona "Publicar Reporte".
-      </div>
-
-      <form id="reportForm">
-        <div class="form-group">
-          <label for="colonia">Colonia:</label>
-          <input type="text" id="colonia" required placeholder="Ej. Americana, Providencia...">
+    <!-- Panel Lateral / Modal desplegable de Formulario (Responsivo) -->
+    <div id="formPanel" class="fixed inset-y-0 right-0 w-full sm:w-96 bg-white shadow-2xl z-20 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col h-full">
+        
+        <!-- Cabecera del Panel -->
+        <div class="p-4 bg-slate-900 text-white flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+                <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
+                <h2 class="font-bold text-lg">Nuevo Reporte</h2>
+            </div>
+            <button onclick="toggleForm()" class="text-slate-400 hover:text-white text-xl p-1">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
 
-        <div class="form-group">
-          <label for="problema">Tipo de problema:</label>
-          <select id="problema">
-            <option value="Sin agua (Corte total)">Sin agua (Corte total)</option>
-            <option value="Baja presión">Baja presión</option>
-            <option value="Agua turbia / Sucia">Agua turbia / Sucia</option>
-          </select>
-        </div>
+        <!-- Cuerpo del Formulario -->
+        <div class="p-5 overflow-y-auto flex-1 space-y-4">
+            
+            <!-- Instrucción interactiva de mapa -->
+            <div id="locationNotice" class="p-3 bg-blue-50 border border-blue-200 rounded-lg text-xs text-blue-800 flex items-start space-x-2">
+                <i class="fa-solid fa-location-crosshairs text-blue-600 text-sm mt-0.5"></i>
+                <div>
+                    <strong>Selecciona la ubicación:</strong> Haz clic sobre el mapa en el lugar exacto de tu colonia para colocar la marca de tu reporte.
+                </div>
+            </div>
 
-        <div class="form-group">
-          <label for="dias">Días sin servicio:</label>
-          <input type
+            <form id="waterReportForm" onsubmit="saveReport(event)" class="space-y-4">
+                
+                <!-- Coordenadas seleccionadas (ocultas o visibles de lectura) -->
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Coordenadas del reporte *</label>
+                    <input type="text" id="coordsInput" required readonly placeholder="Toca el mapa para fijar ubicación" 
+                           class="w-full px-3 py-2 bg-slate-100 border border-slate-300 rounded-lg text-sm text-slate-700 font-mono focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Colonia -->
+                <div>
+                    <label for="colonia" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Colonia / Municipio *</label>
+                    <input type="text" id="colonia" required placeholder="Ej. Providencia, Oblatos, Sta Margarita" 
+                           class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Estado del Servicio -->
+                <div>
+                    <label for="estado" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Estado del Servicio *</label>
+                    <select id="estado" required class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <option value="sin_agua">🔴 Sin agua por completo</option>
+                        <option value="baja_presion">🟠 Baja presión</option>
+                        <option value="agua_sucia">🟡 Agua sucia / contaminada</option>
+                    </select>
+                </div>
+
+                <!-- Días acumulados -->
+                <div>
+                    <label for="dias" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Días sin servicio regular *</label>
+                    <input type="number" id="dias" min="0" max="365" required value="1" 
+                           class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Nombre o Nick -->
+                <div>
+                    <label for="nombre" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Tu Nombre o Alias (Opcional)</label>
+                    <input type="text" id="nombre" placeholder="Vecino anónimo" 
+                           class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <!-- Detalles adicionales -->
+                <div>
+                    <label for="detalles" class="block text-xs font-semibold text-slate-600 uppercase tracking-wider mb-1">Comentario / Detalles</label>
+                    <textarea id="detalles" rows="3" placeholder="Ej. Tampoco hay servicio de pipas municipal..." 
+                              class="w-full px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                </div>
+
+                <div class="pt-2">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg transition duration-200 flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>Publicar Reporte</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Leyenda FLOTANTE de Simbología -->
+    <div class="absolute bottom-6 left-4 z-10 bg-white/95 backdrop-blur-sm p-3 rounded-xl shadow-lg border border-slate-200 text-xs space-y-2 max-w-[200px] sm:max-w-xs">
+        <h4 class="font-bold text-slate-700 border-b pb-1 mb-1">Estatus del Servicio</h4>
+        <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-red-600 inline-block shadow"></span>
+            <span class="text-slate-600">Sin agua por completo</span>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-orange-500 inline-block shadow"></span>
+            <span class="text-slate-600">Baja presión</span>
+        </div>
+        <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-amber-500 inline-block shadow"></span>
+            <span class="text-slate-600">Agua sucia / turbia</span>
+        </div>
+    </div>
+
+    <!-- Script de Configuración y Lógica del Mapa -->
+    <script>
+        // Coordenadas centrales de la Zona Metropolitana de Guadalajara (ZMG)
+        const GDL_CENTER = [20.6760, -103.3470];
+        const ZOOM_LEVEL = 12;
+
+        let map;
+        let selectedLat = null;
+        let selectedLng = null;
+        let tempMarker = null;
+        let reports = [];
+
+        // Inicializar mapa al cargar la ventana
+        window.onload = function() {
+            initMap();
+            loadReports();
+        };
+
+        // 1. Inicializar Leaflet.js
+        function initMap() {
+            map = L.map('map', {
+                zoomControl: true,
+                attributionControl: false
+            }).setView(GDL_CENTER, ZOOM_LEVEL);
+
+            // Capa de Mapa Gratuita (OpenStreetMap)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19
+            }).addTo(map);
+
+            // Escuchar clics en el mapa para fijar la posición del nuevo reporte
+            map.on('click', function(e) {
+                selectedLat = e.latlng.lat;
+                selectedLng = e.latlng.lng;
+                
+                // Actualizar input del formulario
+                document.getElementById('coordsInput').value = `${selectedLat.toFixed(5)}, ${selectedLng.toFixed(5)}`;
+                
+                // Colocar marcador temporal
+                if (tempMarker) {
+                    map.removeLayer(tempMarker);
+                }
+                
+                tempMarker = L.circleMarker([selectedLat, selectedLng], {
+                    radius: 8,
+                    fillColor: "#2563eb",
+                    color: "#ffffff",
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0.9
+                }).addTo(map);
+
+                // Si el panel de formulario está cerrado, abrirlo automáticamente al hacer clic en el mapa
+                const formPanel = document.getElementById('formPanel');
+                if (formPanel.classList.contains('translate-x-full')) {
+                    toggleForm();
+                }
+            });
+        }
+
+        // 2. Controladores de interfaz (Formulario)
+        function toggleForm() {
+            const formPanel = document.getElementById('formPanel');
+            formPanel.classList.toggle('translate-x-full');
+        }
+
+        // 3. Crear iconos circulares personalizados para el mapa de acuerdo al estado
+        function createCustomMarker(estado) {
+            let color = '#dc2626'; // Red
+            if (estado === 'baja_presion') color = '#f97316'; // Orange
+            if (estado === 'agua_sucia') color = '#f59e0b'; // Amber / Brown
+
+            return L.divIcon({
+                className: 'custom-icon',
+                html: `<div style="background-color: ${color}; width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3);"></div>`,
+                iconSize: [18, 18],
+                iconAnchor: [9, 9]
+            });
+        }
+
+        // 4. Guardar Reporte en LocalStorage y Renderizar Pin
+        function saveReport(event) {
+            event.preventDefault();
+
+            if (!selectedLat || !selectedLng) {
+                alert("Por favor, haz clic sobre el mapa para indicar la ubicación de tu colonia.");
+                return;
+            }
+
+            const estadoSelect = document.getElementById('estado');
+            const estadoTexto = estadoSelect.options[estadoSelect.selectedIndex].text;
+            
+            const newReport = {
+                id: Date.now(),
+                lat: selectedLat,
+                lng: selectedLng,
+                colonia: document.getElementById('colonia').value.trim(),
+                estado: estadoSelect.value,
+                estadoTexto: estadoTexto,
+                dias: document.getElementById('dias').value,
+                nombre: document.getElementById('nombre').value.trim() || 'Vecino Anónimo',
+                detalles: document.getElementById('detalles').value.trim(),
+                fecha: new Date().toLocaleString('es-MX', { timeZone: 'America/Mexico_City' })
+            };
+
+            reports.push(newReport);
+
+            // Persistir localmente
+            localStorage.setItem('gdl_water_reports', JSON.stringify(reports));
+
+            // Dibujar en el mapa
+            renderReportMarker(newReport);
+
+            // Limpieza y reset de interfaz
+            document.getElementById('waterReportForm').reset();
+            document.getElementById('coordsInput').value = '';
+            if (tempMarker) {
+                map.removeLayer(tempMarker);
+                tempMarker = null;
+            }
+            selectedLat = null;
+            selectedLng = null;
+
+            // Cerrar formulario
+            toggleForm();
+        }
+
+        // 5. Renderizar Marcadores y Popups
+        function renderReportMarker(report) {
+            const marker = L.marker([report.lat, report.lng], {
+                icon: createCustomMarker(report.estado)
+            }).addTo(map);
+
+            // Contenido HTML estilizado dentro del Popup
+            const popupContent = `
+                <div class="p-2 space-y-1.5 min-w-[200px]">
+                    <div class="flex items-center justify-between border-b pb-1">
+                        <span class="font-bold text-slate-800 text-sm">${escapeHtml(report.colonia)}</span>
+                        <span class="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-mono">${report.dias}d sin agua</span>
+                    </div>
+                    <div class="text-xs font-medium text-slate-700">
+                        ${report.estadoTexto}
+                    </div>
+                    ${report.detalles ? `<p class="text-xs text-slate-500 italic bg-slate-50 p-1.5 rounded border border-slate-100">"${escapeHtml(report.detalles)}"</p>` : ''}
+                    <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1">
+                        <span><i class="fa-regular fa-user mr-1"></i>${escapeHtml(report.nombre)}</span>
+                        <span>${report.fecha}</span>
+                    </div>
+                </div>
+            `;
+
+            marker.bindPopup(popupContent, { className: 'custom-popup' });
+        }
+
+        // 6. Cargar reportes almacenados
+        function loadReports() {
+            const savedReports = localStorage.getItem('gdl_water_reports');
+            
+            // Datos iniciales de demostración en ZMG si está vacío
+            if (!savedReports) {
+                reports = [
+                    {
+                        id: 1,
+                        lat: 20.6736,
+                        lng: -103.3601,
+                        colonia: 'Colonia Americana, Guadalajara',
+                        estado: 'baja_presion',
+                        estadoTexto: '🟠 Baja presión',
+                        dias: '2',
+                        nombre: 'Carlos M.',
+                        detalles: 'Presión casi nula por las tardes.',
+                        fecha: new Date().toLocaleString()
+                    },
+                    {
+                        id: 2,
+                        lat: 20.6200,
+                        lng: -103.2400,
+                        colonia: 'Lomas de Tonalá, Tonalá',
+                        estado: 'sin_agua',
+                        estadoTexto: '🔴 Sin agua por completo',
+                        dias: '5',
+                        nombre: 'María G.',
+                        detalles: 'No entra agua al aljibe desde el fin de semana.',
+                        fecha: new Date().toLocaleString()
+                    }
+                ];
+                localStorage.setItem('gdl_water_reports', JSON.stringify(reports));
+            } else {
+                reports = JSON.parse(savedReports);
+            }
+
+            // Renderizar cada reporte en el mapa
+            reports.forEach(report => renderReportMarker(report));
+        }
+
+        // 7. Funcionalidad de Exportación a JSON
+        function exportData() {
+            if (reports.length === 0) {
+                alert("No hay reportes para exportar aún.");
+                return;
+            }
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(reports, null, 2));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `reportes_agua_gdl_${new Date().toISOString().slice(0,10)}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // Sanitización rápida de HTML
+        function escapeHtml(str) {
+            return str ? str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;") : '';
+        }
+    </script>
+</body>
+</html>
+```
